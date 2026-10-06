@@ -20,6 +20,9 @@ Databricks App  -- set_config(app.user_id) + RLS -->  Lakebase
 
 This repository is a **sanitized public sample** of that BFF. It is not the production deployment, and it intentionally omits live hosts, workspace IDs, secrets, and tenant-specific deploy notes.
 
+For an ordered installation procedure that a coding agent can execute with
+human approval gates, see [Agent setup runbook](docs/AGENT_SETUP.md).
+
 ## What this service does
 
 | Route | Auth | Role |
