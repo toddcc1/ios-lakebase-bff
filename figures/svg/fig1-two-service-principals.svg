@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="780" viewBox="0 0 1600 780" fill="none">
+<title>Fig 1 — Two service principals</title>
+<rect x="0" y="0" width="1600" height="780" fill="#FFFFFF" id="Background"/>
+<g id="Header">
+<text id="Medium|ls1.6::Kicker" x="64" y="76" font-family="JetBrains Mono" font-size="12" font-weight="400" fill="#667085" letter-spacing="1.6">FIG. 1 · TWO MACHINE IDENTITIES</text>
+<text id="Semi Bold|ls-0.4::Title" x="64" y="116" font-family="Inter" font-size="30" font-weight="700" fill="#101828" letter-spacing="-0.4">The BFF never connects to Lakebase</text>
+<text id="Regular|ls0::Subtitle" x="64" y="148" font-family="Inter" font-size="17" font-weight="400" fill="#667085">Two Databricks service principals. Two jobs. Mixing them is how RLS disappears.</text>
+</g>
+<g id="Zone / Public Bff">
+<rect x="64" y="216" width="368" height="460" rx="20" fill="#EFF5FF" stroke="#D5E4FB" stroke-width="1" id="Zone"/>
+<circle cx="92" cy="246" r="4" fill="#0B63CE" id="Dot"/>
+<text id="Bold|ls1.4::Zone label" x="106" y="250.5" font-family="JetBrains Mono" font-size="11.5" font-weight="700" fill="#0B63CE" letter-spacing="1.4">PUBLIC BFF</text>
+</g>
+<g id="Zone / Databricks Workspace">
+<rect x="464" y="216" width="680" height="460" rx="20" fill="#FFF4ED" stroke="#FBDDCB" stroke-width="1" id="Zone"/>
+<circle cx="492" cy="246" r="4" fill="#C4320A" id="Dot"/>
+<text id="Bold|ls1.4::Zone label" x="506" y="250.5" font-family="JetBrains Mono" font-size="11.5" font-weight="700" fill="#C4320A" letter-spacing="1.4">DATABRICKS WORKSPACE</text>
+</g>
+<g id="Zone / Lakebase">
+<rect x="1176" y="216" width="360" height="460" rx="20" fill="#EDFCF5" stroke="#C8EEDD" stroke-width="1" id="Zone"/>
+<circle cx="1204" cy="246" r="4" fill="#067A5B" id="Dot"/>
+<text id="Bold|ls1.4::Zone label" x="1218" y="250.5" font-family="JetBrains Mono" font-size="11.5" font-weight="700" fill="#067A5B" letter-spacing="1.4">LAKEBASE</text>
+</g>
+<g id="Card / Public BFF">
+<rect x="88" y="288" width="320" height="220" rx="14" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="1" id="Card"/>
+<text id="Medium|ls1.3::Card kicker" x="108" y="318" font-family="JetBrains Mono" font-size="10.5" font-weight="400" fill="#0B63CE" letter-spacing="1.3">FASTAPI · HTTPS</text>
+<text id="Semi Bold|ls-0.2::Card title" x="108" y="346" font-family="Inter" font-size="18" font-weight="700" fill="#101828" letter-spacing="-0.2">Public BFF</text>
+</g>
+<g id="BFF SP">
+<g id="Pill / BFF service principal">
+<rect x="108" y="376" width="173.2" height="26" rx="13" fill="#EFF5FF" stroke="#D5E4FB" stroke-width="1" id="Pill"/>
+<text id="Medium|ls0::Pill text" x="119" y="393.32" font-family="JetBrains Mono" font-size="12" font-weight="400" fill="#0B63CE">BFF service principal</text>
+</g>
+<text id="Regular|ls0::Holds client_id + secret." x="108" y="432" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">Holds client_id + secret.</text>
+<text id="Regular|ls0::Calls the app over M2M OAuth." x="108" y="452" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">Calls the app over M2M OAuth.</text>
+<text id="Medium|ls0::No Lakebase credentials." x="108" y="472" font-family="Inter" font-size="13.5" font-weight="400" fill="#344054">No Lakebase credentials.</text>
+</g>
+<g id="Card / CAN_USE only">
+<rect x="488" y="272" width="300" height="168" rx="14" fill="#0C111D" stroke="#0C111D" stroke-width="1" id="Card"/>
+<text id="Medium|ls1.3::Card kicker" x="508" y="302" font-family="JetBrains Mono" font-size="10.5" font-weight="400" fill="#E4A391" letter-spacing="1.3">APPS INGRESS</text>
+<text id="Semi Bold|ls-0.2::Card title" x="508" y="330" font-family="Inter" font-size="18" font-weight="700" fill="#F2F4F7" letter-spacing="-0.2">CAN_USE only</text>
+</g>
+<g id="Ingress">
+<text id="Regular|ls0::Admits the BFF SP." x="508" y="390" font-family="Inter" font-size="13" font-weight="400" fill="#F2F4F7">Admits the BFF SP.</text>
+<text id="Regular|ls0::Consumer tokens die here." x="508" y="410" font-family="Inter" font-size="13" font-weight="400" fill="#98A2B3">Consumer tokens die here.</text>
+</g>
+<g id="Card / Databricks App">
+<rect x="824" y="288" width="288" height="220" rx="14" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="1" id="Card"/>
+<text id="Medium|ls1.3::Card kicker" x="844" y="318" font-family="JetBrains Mono" font-size="10.5" font-weight="400" fill="#C4320A" letter-spacing="1.3">YOUR FASTAPI</text>
+<text id="Semi Bold|ls-0.2::Card title" x="844" y="346" font-family="Inter" font-size="18" font-weight="700" fill="#101828" letter-spacing="-0.2">Databricks App</text>
+</g>
+<g id="App SP">
+<g id="Pill / App service principal">
+<rect x="844" y="376" width="173.2" height="26" rx="13" fill="#FFF4ED" stroke="#FBDDCB" stroke-width="1" id="Pill"/>
+<text id="Medium|ls0::Pill text" x="855" y="393.32" font-family="JetBrains Mono" font-size="12" font-weight="400" fill="#C4320A">App service principal</text>
+</g>
+<text id="Regular|ls0::Injected by Apps." x="844" y="432" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">Injected by Apps.</text>
+<text id="Regular|ls0::Connects to Postgres." x="844" y="452" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">Connects to Postgres.</text>
+<text id="Medium|ls0::bypassrls = false" x="844" y="472" font-family="JetBrains Mono" font-size="13.5" font-weight="400" fill="#344054">bypassrls = false</text>
+</g>
+<g id="Card / One shared database">
+<rect x="1200" y="288" width="312" height="220" rx="14" fill="#FFFFFF" stroke="#D0D5DD" stroke-width="1" id="Card"/>
+<text id="Medium|ls1.3::Card kicker" x="1220" y="318" font-family="JetBrains Mono" font-size="10.5" font-weight="400" fill="#067A5B" letter-spacing="1.3">POSTGRES · RLS</text>
+<text id="Semi Bold|ls-0.2::Card title" x="1220" y="346" font-family="Inter" font-size="18" font-weight="700" fill="#101828" letter-spacing="-0.2">One shared database</text>
+</g>
+<g id="LB">
+<text id="Regular|ls0::App SP role only." x="1220" y="396" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">App SP role only.</text>
+<text id="Medium|ls0::set_config(app.user_id)" x="1220" y="418" font-family="JetBrains Mono" font-size="13" font-weight="400" fill="#101828">set_config(app.user_id)</text>
+<text id="Regular|ls0::Jobs use a different role" x="1220" y="446" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">Jobs use a different role</text>
+<text id="Regular|ls0::that may bypass RLS." x="1220" y="466" font-family="Inter" font-size="13.5" font-weight="400" fill="#667085">that may bypass RLS.</text>
+</g>
+<g id="BFF to ingress">
+<path d="M408 398L481.6 398" fill="none" stroke="#101828" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" id="Line"/>
+<path d="M488 398L480 393.04L480 402.96Z" fill="#101828" id="Head"/>
+</g>
+<g id="Label / BFF SP">
+<rect x="408.4" y="363" width="55.2" height="22" rx="4" fill="#EFF5FF" id="Knockout"/>
+<text id="Medium|ls0::Label text" x="436" y="378" font-family="JetBrains Mono" font-size="12" font-weight="400" fill="#0B63CE" text-anchor="middle">BFF SP</text>
+</g>
+<g id="ingress to app">
+<path d="M788 356L817.6 356" fill="none" stroke="#101828" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" id="Line"/>
+<path d="M824 356L816 351.04L816 360.96Z" fill="#101828" id="Head"/>
+</g>
+<g id="app to lakebase">
+<path d="M1112 398L1193.6 398" fill="none" stroke="#101828" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" id="Line"/>
+<path d="M1200 398L1192 393.04L1192 402.96Z" fill="#101828" id="Head"/>
+</g>
+<g id="Label / App SP">
+<rect x="1128.4" y="363" width="55.2" height="22" rx="4" fill="#FFF4ED" id="Knockout"/>
+<text id="Medium|ls0::Label text" x="1156" y="378" font-family="JetBrains Mono" font-size="12" font-weight="400" fill="#C4320A" text-anchor="middle">App SP</text>
+</g>
+<g id="Forbidden BFF to Lakebase">
+<path d="M248 508L248 548Q248 560 260 560L1344 560Q1356 560 1356 548L1356 514.4" fill="none" stroke="#98A2B3" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="5 6" id="Line"/>
+<path d="M1356 508L1351.04 516L1360.96 516Z" fill="#98A2B3" id="Head"/>
+</g>
+<g id="Blocked">
+<circle cx="800" cy="560" r="15" fill="#FFFFFF" id="Halo"/>
+<circle cx="800" cy="560" r="12" fill="#D92D20" id="Disc"/>
+<path d="M795.44 555.44L804.56 564.56M804.56 555.44L795.44 564.56" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" id="X"/>
+</g>
+<g id="Pill / No path. BFF has no Postgres role.">
+<rect x="661.5" y="588" width="277" height="28" rx="14" fill="#FEF3F2" stroke="#FAD7D3" stroke-width="1" id="Pill"/>
+<text id="Medium|ls0::Pill text" x="672.5" y="606.5" font-family="JetBrains Mono" font-size="12.5" font-weight="400" fill="#D92D20">No path. BFF has no Postgres role.</text>
+</g>
+<g id="Caption">
+<text id="Medium|ls0.2::Caption" x="48" y="744" font-family="Inter" font-size="13" font-weight="400" fill="#667085" letter-spacing="0.2">Figure 1. Two service principals</text>
+</g>
+</svg>

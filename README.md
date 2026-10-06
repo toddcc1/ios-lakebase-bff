@@ -67,7 +67,134 @@ uvicorn app.main:app --reload --port 8080
 curl localhost:8080/health
 ```
 
-You need a Databricks App that exposes at least `POST /internal/users/resolve` and RLS-scoped inventory routes, plus a service principal with `CAN_USE` on that app only.
+## Wiring Databricks and Lakebase
+
+The BFF is **not** configured against Lakebase. You configure two Databricks identities, then one Postgres role on the *app* side.
+
+![Figure 1. Two service principals](figures/png/fig1-two-service-principals.png)
+
+| Identity | What it is | What it may do |
+|---|---|---|
+| **BFF service principal** | You create this. `DATABRICKS_SP_CLIENT_ID` / `_SECRET` on the BFF. | M2M OAuth into Apps ingress. `CAN_USE` on one app. Nothing else. |
+| **App service principal** | Injected by Databricks Apps when you deploy the app. | Connect to Lakebase as one pooled Postgres role. `bypassrls = false`. |
+| **Jobs / owner role** (optional, not this repo) | Migrations, catalog loads. | May have `bypassrls = true`. Must never be the app's request-path identity. |
+
+Do not reuse the app SP as the BFF SP. Do not give the BFF a Lakebase password or OAuth Postgres token.
+
+![Figure 2. Provision order](figures/png/fig2-provision-order.png)
+
+Pass `--profile <PROFILE>` on every Databricks CLI command. List profiles with `databricks auth profiles` and pick the workspace that hosts the app. Do not assume `DEFAULT`.
+
+### 1. Databricks App
+
+Deploy a Databricks App that exposes at least:
+
+- `POST /internal/users/resolve` (no `X-Cardshop-User-Id`; this mints `users.id`)
+- RLS-scoped routes that read that header on later calls
+
+Note the app name and its HTTPS URL (`DATABRICKS_APP_URL`). Note the **app** service principal's application id (the identity Apps injected, not the BFF).
+
+```bash
+databricks apps list --profile <PROFILE>
+databricks apps get <app-name> --profile <PROFILE>
+```
+
+### 2. App Postgres role (Lakebase)
+
+This is the identity the Databricks App uses to talk to Postgres. Bind it to the **app** service principal. Confirm it cannot bypass RLS.
+
+```bash
+databricks postgres create-role \
+  projects/<PROJECT_ID>/branches/<BRANCH_ID> \
+  --role-id <APP_SP_CLIENT_ID> \
+  --json '{
+    "spec": {
+      "identity_type": "SERVICE_PRINCIPAL",
+      "postgres_role": "<APP_SP_CLIENT_ID>",
+      "auth_method": "LAKEBASE_OAUTH_V1"
+    }
+  }' \
+  --profile <PROFILE>
+
+databricks postgres list-roles \
+  projects/<PROJECT_ID>/branches/<BRANCH_ID> \
+  --profile <PROFILE>
+```
+
+`bypassrls` must be `false`. Then grant ordinary DML on tenant tables in SQL (do not add `DATABRICKS_SUPERUSER`). Policies look like:
+
+```sql
+SELECT set_config('app.user_id', %s, false);
+
+-- on tenant tables:
+USING (user_id = current_setting('app.user_id', true)::uuid)
+```
+
+A missing `X-Cardshop-User-Id` should 401 in the app. Do not fall back to a bootstrap UUID in production.
+
+### 3. BFF service principal
+
+A **second** workspace service principal. Display name is yours; keep it obviously not the app.
+
+```bash
+databricks service-principals create --display-name "your-app-bff" --profile <PROFILE>
+```
+
+The create response includes a workspace numeric `id` and an `applicationId` (UUID). The UUID is `DATABRICKS_SP_CLIENT_ID`. Mint a secret against the numeric id:
+
+```bash
+databricks service-principal-secrets-proxy create <SP_NUMERIC_ID> \
+  --lifetime 31536000s \
+  --profile <PROFILE>
+```
+
+That secret is `DATABRICKS_SP_CLIENT_SECRET`. Put it in a secret store, never in git.
+
+`DATABRICKS_HOST` is the workspace URL, for example `https://adb-XXXXXXXXXXXXXXXX.XX.azuredatabricks.net`.
+
+### 4. Grant CAN_USE (and nothing broader)
+
+Apps permissions are **not** the generic `databricks permissions` command. Read the ACL first. `set-permissions` replaces the whole list; prefer `update-permissions` to add the BFF without wiping admins.
+
+```bash
+databricks apps get-permissions <app-name> --profile <PROFILE>
+
+databricks apps update-permissions <app-name> --profile <PROFILE> --json '{
+  "access_control_list": [
+    {
+      "service_principal_name": "<BFF_SP_APPLICATION_ID>",
+      "permission_level": "CAN_USE"
+    }
+  ]
+}'
+```
+
+Then get-permissions again. You want:
+
+- `admins` (inherited) `CAN_MANAGE`
+- maybe your user `CAN_MANAGE`
+- the BFF SP `CAN_USE`
+
+Turn off "anyone in my organization can use." If that group has `CAN_USE`, any workspace principal can present a forged `X-Cardshop-User-Id`.
+
+### 5. Point this BFF at that stack
+
+Fill `.env` from `.env.example`. The only Databricks values this process needs are host, app URL, and **BFF** SP credentials. Lakebase host, database name, and the app SP stay on the Databricks App.
+
+Generate `SESSION_SECRET` with:
+
+```bash
+python3 -c "import secrets; print(secrets.token_urlsafe(32))"
+```
+
+Smoke test without iOS:
+
+```bash
+curl localhost:8080/health
+# then GET /me with a real Apple or Auth0 ID token
+```
+
+`/me` should call `POST /internal/users/resolve` as the BFF SP and return a `user_id` plus `session_token`. A 401 at Apps ingress usually means the wrong SP, a missing `CAN_USE`, or `DATABRICKS_APP_URL` pointing at a different app.
 
 ## Deploy sketch
 
