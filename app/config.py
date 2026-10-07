@@ -32,7 +32,7 @@ class Settings:
     okta_jwks_url: str
 
     # The Databricks App this BFF calls server-to-server.
-    databricks_app_url: str  # e.g. https://cardshop-app-<id>.<region>.databricksapps.com
+    databricks_app_url: str  # e.g. https://your-app-name.<region>.databricksapps.com
     databricks_host: str     # workspace host, e.g. https://adb-....azuredatabricks.net
 
     # This BFF's OWN Databricks service principal (M2M OAuth) -- distinct

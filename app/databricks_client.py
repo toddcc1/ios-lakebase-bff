@@ -4,7 +4,7 @@ Why the trusted user header is safe: Databricks Apps ingress requires every
 caller to already be a Databricks principal with CAN_USE on the app. As long
 as CAN_USE is scoped only to this BFF's service principal (plus maybe a human
 admin for debugging), any request that reaches the app came through this BFF.
-The app can then trust X-Cardshop-User-Id without a second signature scheme.
+The app can then trust X-App-User-Id without a second signature scheme.
 If CAN_USE is granted more broadly, that assumption breaks.
 
 Auth: this BFF has its own Databricks service principal (M2M OAuth), distinct
@@ -55,7 +55,7 @@ async def call_app(method: str, path: str, *, user_id: str | None = None, **kwar
     headers = dict(cfg.authenticate())  # {"Authorization": "Bearer <token>"}
     headers["X-Request-Id"] = request_id.get()
     if user_id:
-        headers["X-Cardshop-User-Id"] = user_id
+        headers["X-App-User-Id"] = user_id
     url = f"{settings.databricks_app_url}{path}"
     async with httpx.AsyncClient(timeout=30) as client:
         try:

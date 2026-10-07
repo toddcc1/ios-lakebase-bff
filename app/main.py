@@ -631,7 +631,7 @@ async def promote_research_card(research_card_id: int, body: PromoteResearchCard
 @app.get("/players/{mlb_person_id}/headshot")
 async def player_headshot(mlb_person_id: int, _user_id: str = Depends(require_session)) -> Response:
     """Proxies databricks-app's GET /api/players/{id}/headshot -- shared/global
-    reference data (no RLS, no X-Cardshop-User-Id needed), but still gated
+    reference data (no RLS, no X-App-User-Id needed), but still gated
     behind a valid app session so it's not a fully open public endpoint.
     """
     return await _proxy_image(f"/api/players/{mlb_person_id}/headshot", None, not_found_detail="no headshot")

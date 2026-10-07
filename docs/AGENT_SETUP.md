@@ -36,7 +36,7 @@ The BFF never connects to Lakebase.
     them.
 11. Use placeholders in committed files. Store live values only in an
     untracked `.env` or the deployment platform's secret store.
-12. Treat a missing `X-Cardshop-User-Id` as unauthorized in production. Never
+12. Treat a missing `X-App-User-Id` as unauthorized in production. Never
     substitute a bootstrap UUID.
 
 ## Architecture invariant
@@ -48,7 +48,7 @@ iOS
   -> Apple or Auth0 ID token
 Public BFF
   -> Databricks OAuth as the BFF service principal
-  -> X-Cardshop-User-Id after identity resolution
+  -> X-App-User-Id after identity resolution
 Databricks App
   -> Lakebase OAuth as the App service principal
   -> set_config('app.user_id', ...)
@@ -287,14 +287,19 @@ Required behavior:
 5. Otherwise create a new user.
 6. Return `{ "user_id": "<uuid>", "created": true|false }`.
 
-Do not require `X-Cardshop-User-Id` on this route. Resolving that value is the
+Do not require `X-App-User-Id` on this route. Resolving that value is the
 route's purpose.
 
 ### 3.2 Request identity guard
 
+`X-App-User-Id` is this application's internal user UUID (`users.id`). The BFF
+mints it through `/internal/users/resolve`. It is not an Apple or Auth0
+`sub`, not a Databricks principal, and not a product brand. Rename the header
+if you want; keep the meaning: one stable app-owned id per person.
+
 All user-owned routes must:
 
-1. Require `X-Cardshop-User-Id`.
+1. Require `X-App-User-Id`.
 2. Parse it as a UUID.
 3. Return 401 when it is missing or malformed.
 4. Never use a default or bootstrap tenant in production.
@@ -462,7 +467,7 @@ Required result:
 - No broad account group has `CAN_USE`.
 - No unrelated service principal has `CAN_USE`.
 
-This ACL is what makes `X-Cardshop-User-Id` trustworthy. If access is widened,
+This ACL is what makes `X-App-User-Id` trustworthy. If access is widened,
 the header design must be replaced with an independently authenticated
 downstream assertion.
 
@@ -609,7 +614,7 @@ curl --fail \
 Verify:
 
 - The BFF sends its Databricks OAuth token to Apps ingress.
-- It adds `X-Cardshop-User-Id`.
+- It adds `X-App-User-Id`.
 - The Databricks App sets `app.user_id`.
 - Lakebase returns only that user's rows.
 

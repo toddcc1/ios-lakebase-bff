@@ -7,14 +7,14 @@ Databricks Apps ingress only admits Databricks principals with `CAN_USE` on the 
 1. Verify the consumer identity token (Apple and/or Auth0 / Okta CIAM).
 2. Resolve (or create) a stable internal `user_id` by calling the Databricks App as a machine identity.
 3. Issue an app-owned session JWT for the phone.
-4. On later calls, validate that session and call the Databricks App with a Databricks OAuth token plus a trusted `X-Cardshop-User-Id` header.
+4. On later calls, validate that session and call the Databricks App with a Databricks OAuth token plus a trusted `X-App-User-Id` header.
 
 The BFF never connects to Lakebase. Row-level security stays in the Databricks App / Postgres path.
 
 ```
 iOS  -- Apple or Auth0 ID token -->  BFF (public HTTPS)
        -- verify, resolve user, issue session -->
-       -- Databricks SP + X-Cardshop-User-Id -->
+       -- Databricks SP + X-App-User-Id -->
 Databricks App  -- set_config(app.user_id) + RLS -->  Lakebase
 ```
 
@@ -29,13 +29,14 @@ human approval gates, see [Agent setup runbook](docs/AGENT_SETUP.md).
 |---|---|---|
 | `GET /health` | none | Liveness |
 | `GET /me` | Bearer Apple or Auth0 ID token (`X-OIDC-Nonce` when the token has a nonce) | Verify IdP → `POST /internal/users/resolve` on the app → return `user_id` + `session_token` |
-| Everything else | Bearer BFF session JWT | Proxy to the Databricks App with `X-Cardshop-User-Id` set |
+| Everything else | Bearer BFF session JWT | Proxy to the Databricks App with `X-App-User-Id` set |
 
 Proxy routes in `app/main.py` mirror a inventory-style FastAPI app (cards, research, players). Treat them as examples of the session → trusted-header → app pattern. Your backend paths can differ; the identity edge should not.
 
 ## Trust model (load-bearing)
 
-- **Only this BFF's Databricks service principal** should have `CAN_USE` on the target app (plus admin identities for manage). That is what makes `X-Cardshop-User-Id` trustworthy.
+- **`X-App-User-Id` is the application's internal user UUID** (`users.id`), minted by `POST /internal/users/resolve`. It is not an Apple or Auth0 `sub`. Rename the header if you want; keep that meaning.
+- **Only this BFF's Databricks service principal** should have `CAN_USE` on the target app (plus admin identities for manage). That is what makes `X-App-User-Id` trustworthy.
 - The BFF holds **no** Lakebase credentials.
 - Face ID (or similar biometrics) on the phone unlocks a retained refresh / session secret. It does not authenticate to Databricks.
 - Production apps should reject a missing user header rather than falling back to a bootstrap tenant. That check lives in the Databricks App, not here.
@@ -92,7 +93,7 @@ Pass `--profile <PROFILE>` on every Databricks CLI command. List profiles with `
 
 Deploy a Databricks App that exposes at least:
 
-- `POST /internal/users/resolve` (no `X-Cardshop-User-Id`; this mints `users.id`)
+- `POST /internal/users/resolve` (no `X-App-User-Id`; this mints `users.id`)
 - RLS-scoped routes that read that header on later calls
 
 Note the app name and its HTTPS URL (`DATABRICKS_APP_URL`). Note the **app** service principal's application id (the identity Apps injected, not the BFF).
@@ -133,7 +134,7 @@ SELECT set_config('app.user_id', %s, false);
 USING (user_id = current_setting('app.user_id', true)::uuid)
 ```
 
-A missing `X-Cardshop-User-Id` should 401 in the app. Do not fall back to a bootstrap UUID in production.
+A missing `X-App-User-Id` should 401 in the app. Do not fall back to a bootstrap UUID in production.
 
 ### 3. BFF service principal
 
@@ -178,7 +179,7 @@ Then get-permissions again. You want:
 - maybe your user `CAN_MANAGE`
 - the BFF SP `CAN_USE`
 
-Turn off "anyone in my organization can use." If that group has `CAN_USE`, any workspace principal can present a forged `X-Cardshop-User-Id`.
+Turn off "anyone in my organization can use." If that group has `CAN_USE`, any workspace principal can present a forged `X-App-User-Id`.
 
 ### 5. Point this BFF at that stack
 
@@ -219,7 +220,7 @@ app/
   apple_auth.py        # Apple JWKS verify
   okta_auth.py         # Auth0 / Okta JWKS + nonce rules
   session.py           # HS256 session JWT
-  databricks_client.py # M2M call + X-Cardshop-User-Id
+  databricks_client.py # M2M call + X-App-User-Id
   config.py            # env-driven settings
   request_context.py   # request id / user correlation for logs
 ```
@@ -228,7 +229,7 @@ app/
 
 - Do not commit `.env`, PATs, SP secrets, or real workspace hosts.
 - Scope `CAN_USE` tightly. A broad grant turns the trusted header into a free tenant switch.
-- Prefer rejecting missing `X-Cardshop-User-Id` in the Databricks App over a bootstrap UUID fallback.
+- Prefer rejecting missing `X-App-User-Id` in the Databricks App over a bootstrap UUID fallback.
 - Session tokens here are long-lived HMAC JWTs (`sub` / `iat` / `exp`). Harden for production (shorter TTL, `iss`/`aud`, revocation) if you ship this pattern broadly.
 - Auth0 interactive login ID tokens carry a `nonce`; refresh-token ID tokens often do not. The verifier matches that behavior.
 
